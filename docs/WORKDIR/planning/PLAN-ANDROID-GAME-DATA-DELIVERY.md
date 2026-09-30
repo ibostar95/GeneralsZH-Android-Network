@@ -16,30 +16,36 @@ the retail archives.
 
 ## Delivery design
 
-Keep the source repository free of retail archives. Two delivery modes can
-share one device-side installer:
+Keep the source repository free of retail archives. The chosen delivery mode is
+a first-run download from the user's VPS over HTTPS. A small manifest lists
+each file's relative path, byte length, and SHA-256. Download into temporary
+files and verify before making the installation active. The same manifest can
+support a locally bundled build later if needed.
 
-1. **Locally bundled data:** During a personal build, stage an authorized
-   complete game-data directory outside Git. The packaging step includes it in
-   the APK if its total size fits the selected Android distribution format.
-2. **First-run download:** Publish the same data through an authorized HTTPS
-   endpoint outside the source repository. A small manifest lists each file's
-   relative path, byte length, and SHA-256. Download into temporary files and
-   verify before making the installation active.
-
-For either mode, install into an app-owned directory on a worker thread with
-visible progress, preserve the base Generals subdirectory layout, and write
+Install into an app-owned directory on a worker thread with visible progress,
+preserve the base Generals subdirectory layout, and write
 `gamedata_path.txt` only after complete validation. Keep Setup's existing
 folder picker for players who already have a copy on the phone. Do not use the
 GeneralsOnline community-data installer for the retail archives: it has a
 different source, destination, and update contract.
 
-## Information needed before implementation
+## Source data and VPS audit
 
-- The local path to the authorized game-data directory or its download URL.
-- Whether the authorization covers public distribution of the original game
-  data, or only private/personal builds.
-- Total size and the actual directory layout, including base Generals files.
+The supplied folder, `C:\lan`, now contains 34 `BIGF` archives totaling
+2,076,166,791 bytes: Zero Hour and base Generals archives in one directory.
+Public distribution of the retail data has been authorized by the user for
+this project. The assets will be served from the user's VPS after a read-only
+audit identifies an isolated location that cannot affect other services.
+The configured `evaenergy-vps` SSH host currently fails host-key verification;
+no remote audit or upload has occurred. Verify the current key through the VPS
+provider before using SSH. The audit must remain read-only and identify a new
+directory and web route without changing other projects or shared services.
+
+`scripts/build/android/prepare-retail-data.py` checks the archive set and
+creates a SHA-256 manifest for individually named VPS assets. Keep any output
+in the gitignored `retail-game-data/` directory. Each asset can be fetched
+independently on a retry; the manifest is the contract for the device-side
+installer. Do not upload anything until the VPS audit is complete.
 
 ## Network validation after an installable build
 
