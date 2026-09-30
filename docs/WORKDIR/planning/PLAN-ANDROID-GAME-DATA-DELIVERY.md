@@ -34,18 +34,26 @@ different source, destination, and update contract.
 The supplied folder, `C:\lan`, now contains 34 `BIGF` archives totaling
 2,076,166,791 bytes: Zero Hour and base Generals archives in one directory.
 Public distribution of the retail data has been authorized by the user for
-this project. The assets will be served from the user's VPS after a read-only
-audit identifies an isolated location that cannot affect other services.
-The configured `evaenergy-vps` SSH host currently fails host-key verification;
-no remote audit or upload has occurred. Verify the current key through the VPS
-provider before using SSH. The audit must remain read-only and identify a new
-directory and web route without changing other projects or shared services.
+this project. The assets are served from the user's VPS following a read-only
+audit and a scoped deployment under a new project directory.
+The VPS host key was verified independently through the provider console, and
+the read-only capacity and service audit is complete. One copy is now under
+`/srv/generalszh-android-network/public/v1/`; server hashes match the local
+manifest. The current manifest URL is
+`https://kinotrack.uz/generals-files/v1/game-data-manifest.json`.
+The root filesystem is now approximately 92% full with 15 GiB available; keep
+builds off the VPS. One scoped nginx include serves only `/generals-files/`
+and caps sustained payload at 96 Mbit/s. Existing endpoint checks passed
+before and after a graceful nginx reload. Application containers, firewall,
+certificates, packages, and other projects' data were not changed. Directory
+isolation does not eliminate shared disk and network load. See
+[the hosting record](PLAN-GENERALS-VPS-HOSTING.md) for limits and statistics.
 
 `scripts/build/android/prepare-retail-data.py` checks the archive set and
 creates a SHA-256 manifest for individually named VPS assets. Keep any output
 in the gitignored `retail-game-data/` directory. Each asset can be fetched
 independently on a retry; the manifest is the contract for the device-side
-installer. Do not upload anything until the VPS audit is complete.
+installer. The device-side retail installer is not implemented yet.
 
 ## Network validation after an installable build
 

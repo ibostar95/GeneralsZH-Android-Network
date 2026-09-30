@@ -11,7 +11,7 @@ import json
 import shutil
 import sys
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 
 ZH_REQUIRED = {"inizh.big", "terrainzh.big", "textureszh.big", "w3dzh.big", "windowzh.big"}
@@ -65,14 +65,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zh", type=Path, required=True, help="Zero Hour archive directory")
     parser.add_argument("--base", type=Path, help="Base Generals directory; defaults to --zh")
-    parser.add_argument("--base-url", help="HTTPS VPS asset URL ending in /")
+    parser.add_argument("--base-url", help="Optional HTTPS directory URL; default uses relative URLs")
+    parser.add_argument("--version", default="game-data-v1", help="Immutable data version")
     parser.add_argument("--output", type=Path, help="Empty directory for manifest and optional assets")
     parser.add_argument("--copy-assets", action="store_true", help="Copy archives to --output")
     args = parser.parse_args()
 
-    if args.output and (not args.base_url or not args.base_url.startswith("https://")
-                        or not args.base_url.endswith("/")):
-        parser.error("--output requires --base-url as an HTTPS URL ending in /")
+    if args.base_url:
+        url = urlsplit(args.base_url)
+        if (url.scheme != "https" or not url.hostname or url.username or url.password
+                or url.query or url.fragment or not args.base_url.endswith("/")):
+            parser.error("--base-url must be an HTTPS directory URL without credentials or query")
     if args.copy_assets and not args.output:
         parser.error("--copy-assets requires --output")
     try:
@@ -90,7 +93,7 @@ def main() -> int:
                 if output == source.parent.resolve() or output in source.resolve().parents:
                     raise ValueError("Output directory must not contain source archives")
 
-        manifest = {"schema": 1, "files": []}
+        manifest = {"schema": 1, "version": args.version, "files": []}
         total = 0
         for prefix, subdir, files in groups:
             for source in files:
@@ -101,7 +104,7 @@ def main() -> int:
                     relative_path = relative_path[2:]
                 manifest["files"].append({
                     "path": relative_path,
-                    "url": args.base_url + quote(asset_name) if args.base_url else None,
+                    "url": (args.base_url or "") + quote(asset_name),
                     "size": size,
                     "sha256": digest,
                 })
@@ -112,6 +115,8 @@ def main() -> int:
                 print(f"{relative_path}: {size:,} bytes, SHA-256 {digest}")
 
         if output is not None:
+            output.mkdir(parents=True, exist_ok=True)
+            manifest["total_bytes"] = total
             (output / "game-data-manifest.json").write_text(
                 json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
             )
