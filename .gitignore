@@ -108,3 +108,10 @@ android-staging/
 # is disabled on this fork, so a ~40MB binary can't go into version control
 # at all even if it were source), not something to commit.
 /GeneralsXZH-android-local.apk
+
+# Locally supplied retail game data must stay out of this public source fork.
+# Use a private staging folder for personal builds or a separate authorized
+# distribution channel; never commit retail archives into source history.
+*.[bB][iI][gG]
+/android/app/src/main/assets/retail_game/
+/retail-game-data/
