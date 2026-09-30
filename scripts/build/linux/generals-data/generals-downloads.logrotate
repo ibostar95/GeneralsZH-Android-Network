@@ -1,0 +1,11 @@
+# Only the new Generals log is rotated; no shared nginx signal is required.
+/srv/generalszh-android-network/logs/downloads.jsonl {
+    daily
+    maxsize 5M
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}
